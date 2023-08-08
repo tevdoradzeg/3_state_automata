@@ -1,8 +1,16 @@
 {
   "version": 2,
-  "dgSpecHash": "kBHOCWXkJrIHunSrA7b8ogTTCFhYRYrjQz2fajcmB3zdQUjitvL7/aKrrQ8xdAFtRJw6yNmy0TdUwz6eQIcDKw==",
+  "dgSpecHash": "3O/7D6ZykspolMtWJ7umvsdu80BlYRzbTPVomahEk3reLRD/PcJxa2GzO1eFOD/Z1bYXwHZORKks+D/GPP7JLA==",
   "success": true,
   "projectFilePath": "/Users/giorgi/Documents/C#/3_state_automata/3_state_automata.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "/Users/giorgi/.nuget/packages/atksharp/3.24.24.95/atksharp.3.24.24.95.nupkg.sha512",
+    "/Users/giorgi/.nuget/packages/cairosharp/3.24.24.95/cairosharp.3.24.24.95.nupkg.sha512",
+    "/Users/giorgi/.nuget/packages/gdksharp/3.24.24.95/gdksharp.3.24.24.95.nupkg.sha512",
+    "/Users/giorgi/.nuget/packages/giosharp/3.24.24.95/giosharp.3.24.24.95.nupkg.sha512",
+    "/Users/giorgi/.nuget/packages/glibsharp/3.24.24.95/glibsharp.3.24.24.95.nupkg.sha512",
+    "/Users/giorgi/.nuget/packages/gtksharp/3.24.24.95/gtksharp.3.24.24.95.nupkg.sha512",
+    "/Users/giorgi/.nuget/packages/pangosharp/3.24.24.95/pangosharp.3.24.24.95.nupkg.sha512"
+  ],
   "logs": []
 }
