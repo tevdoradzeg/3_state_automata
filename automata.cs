@@ -1,5 +1,8 @@
 ﻿using Gdk;
 using Gtk;
+using Cairo;
+using Color = Cairo.Color;
+
 
 // Class used to store the states of the points as integers (0, 1 or 2)
 class SimBoard {
@@ -17,24 +20,61 @@ class SimBoard {
 
 }
 
+class DrawBoard : DrawingArea {
+    Color green = new Color(0, 1, 0),
+    yellow = new Color (1, 1, 0),
+    black = new Color(0, 0, 0);
 
-// Gtk class of the main window UI
-class MainWindow : Gtk.Window {
-    public MainWindow() : base("3-State Automata") {
+    protected override bool OnDrawn(Context c) {
+        c.SetSourceColor(green);
+        c.LineWidth = 1;
+
+        c.Rectangle(x: 0, y: 0, width: 500, height: 500);
+        c.Fill();
+
+        return true;
     }
 
-    protected override bool OnDeleteEvent(Event evnt) {
+}
+
+
+// Gtk class of the board window UI
+class BoardWindow : Gtk.Window {
+    public BoardWindow() : base("3-State Automata") {
+        Resize(500, 500);
+        DrawBoard mainBoard = new DrawBoard();
+        Add(mainBoard);
+    }
+
+    protected override bool OnDeleteEvent(Event e) {
         Application.Quit();
         return true;
     }
 }
 
+class ControlWindow : Gtk.Window {
+    public ControlWindow() : base("Control Window") {
+        Box mainBox = new Box(Orientation.Vertical, 5);
+        mainBox.Add(new Label("Test Label"));
+
+        Add(mainBox);
+    }
+
+    protected override bool OnDeleteEvent(Event e) {
+        Application.Quit();
+        return true;
+    }
+}
 
 // Main execution loop of the program
 class MainLoop {
     public static void Main(string[] args){
         Application.Init();
-        MainWindow main = new MainWindow();
+
+        BoardWindow main = new BoardWindow();
+        // ControlWindow control = new ControlWindow();
+
+        // control.ShowAll();
         main.ShowAll();
         Application.Run();
     }
