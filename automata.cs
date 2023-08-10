@@ -2,13 +2,14 @@
 using Gtk;
 using Cairo;
 using Color = Cairo.Color;
+using static Gdk.EventMask;
 
 
 // Class used to store the states of the points as integers (0, 1 or 2)
 class SimBoard {
     int[,]? numBoard = null;
 
-    // Initialization with custom size, sets all states to 0.
+    // Initialization with custom size, sets all states to 0
     public SimBoard (int size){
         numBoard = new int[size, size];
         for (int i = 0; i < size; i++){
@@ -20,19 +21,54 @@ class SimBoard {
 
 }
 
+// Class used for the visual representation of the simulation board
 class DrawBoard : DrawingArea {
     Color green = new Color(0, 1, 0),
     yellow = new Color (1, 1, 0),
     black = new Color(0, 0, 0);
 
+    double xCord;
+    double yCord;
+
+    ImageSurface board;
+
+    public DrawBoard() {
+        board = new ImageSurface(Format.Rgb24, 500, 500);
+
+        using (Context c = new Context(board)) {
+            c.SetSourceColor(green);
+            c.Paint();
+        }
+
+        AddEvents((int) (ButtonPressMask | ButtonReleaseMask));
+    }
+
     protected override bool OnDrawn(Context c) {
-        c.SetSourceColor(green);
-        c.LineWidth = 1;
-
-        c.Rectangle(x: 0, y: 0, width: 500, height: 500);
-        c.Fill();
-
+        c.SetSourceSurface(board, 0, 0);
+        c.Paint();
+        
         return true;
+    }
+    
+    protected override bool OnButtonPressEvent(EventButton e) {
+        xCord = e.X;
+        yCord = e.Y;
+        
+        Context c = new Context(board);
+        fillCube(c, xCord, yCord);
+
+        QueueDraw();
+        return true;
+    }
+
+    void fillCube(Context c, double inpX, double inpY) {
+        int drawX  = ((int) xCord) / 50 * 50;
+        int drawY = ((int) yCord) / 50 * 50;
+
+        c.SetSourceColor(yellow);
+        c.LineWidth = 1;
+        c.Rectangle(x: drawX, y: drawY, width: 50, height: 50);
+        c.Fill();
     }
 
 }
@@ -52,6 +88,7 @@ class BoardWindow : Gtk.Window {
     }
 }
 
+// Gtk class of the control window UI (not in use)
 class ControlWindow : Gtk.Window {
     public ControlWindow() : base("Control Window") {
         Box mainBox = new Box(Orientation.Vertical, 5);
