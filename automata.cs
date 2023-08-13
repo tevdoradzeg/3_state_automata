@@ -3,6 +3,7 @@ using Gtk;
 using Cairo;
 using Color = Cairo.Color;
 using static Gdk.EventMask;
+using Timeout = GLib.Timeout;
 
 enum Colors {Green, Yellow, Black};
 
@@ -10,6 +11,7 @@ enum Colors {Green, Yellow, Black};
 // Class used to store the states of the points as integers (0, 1 or 2)
 class SimBoard {
     public int[,] numBoard;
+    int n;
 
     // Initialization with custom size, sets all states to 0
     public SimBoard (int size){
@@ -19,6 +21,56 @@ class SimBoard {
                 numBoard[i, j] = 0;
             }
         }
+        n = size;
+    }
+
+    public void ApplyModRule() {
+        int[,] newBoardH = new int[n,n];
+
+        for (int i = 0; i < n; i++){
+            for (int j = 0; j < n; j++){
+                newBoardH[i,j] = ModHorizontal(i, j);
+            }
+        }
+        
+        numBoard = newBoardH;
+        int[,] newBoardV = new int[n,n];
+
+        for (int i = 0; i < n; i++){
+            for (int j = 0; j < n; j++){
+                newBoardV[i,j] = ModVertical(i, j);
+            }
+        }
+
+        numBoard = newBoardV;
+    }
+
+    int ModHorizontal(int i, int j){
+        int left = j - 1;
+        if (left < 0){
+            left = n - 1;
+        }
+
+        int right = j + 1;
+        if (right >= n){
+            right = 0;
+        }
+
+        return (numBoard[i, j] + numBoard[i, left] + numBoard[i, right]) % 3;
+    }
+
+    int ModVertical(int i, int j){
+        int up = i - 1;
+        if (up < 0){
+            up = n - 1;
+        }
+
+        int down = i + 1;
+        if (down >= n){
+            down = 0;
+        }
+
+        return (numBoard[i, j] + numBoard[down, j] + numBoard[up, j]) % 3;
     }
 
 }
@@ -63,8 +115,8 @@ class DrawBoard : DrawingArea {
             return true;
         }
         
-        int xIndex = ((int) xCord) / 50;
-        int yIndex = ((int) yCord) / 50;
+        int xIndex = ((int) xCord) / 25;
+        int yIndex = ((int) yCord) / 25;
 
         int fillInt;
         if (currColor == Colors.Green){
@@ -84,12 +136,12 @@ class DrawBoard : DrawingArea {
     }
 
     void fillCube(Context c, int inpX, int inpY, Color color) {
-        int drawX  = inpX * 50;
-        int drawY = inpY * 50;
+        int drawX  = inpX * 25;
+        int drawY = inpY * 25;
 
         c.SetSourceColor(color);
         c.LineWidth = 1;
-        c.Rectangle(x: drawX, y: drawY, width: 50, height: 50);
+        c.Rectangle(x: drawX, y: drawY, width: 25, height: 25);
         c.Fill();
     }
 
@@ -114,17 +166,24 @@ class DrawBoard : DrawingArea {
     public void setColor(Colors inp){
         currColor = inp;
     }
+
+    public void ApplyStep(){
+        numMatrix.ApplyModRule();
+        fillBoard(numMatrix);
+        QueueDraw();
+    }
 }
 
 
 // Gtk class of the board window UI
 class BoardWindow : Gtk.Window {
     DrawBoard mainBoard;
+    bool playing = false;
 
     public BoardWindow(SimBoard nums) : base("3-State Automata") {
         Resize(700, 500);
         mainBoard = new DrawBoard(nums);
-        Box mainBox = new Box(Orientation.Horizontal, 5);
+        Box mainBox = new Box(Orientation.Horizontal, 1);
         Box rightSide = new Box(Orientation.Vertical, 5);
 
         rightSide.Add(new Label("Control Panel"));
@@ -133,18 +192,23 @@ class BoardWindow : Gtk.Window {
         RadioButton g = new RadioButton("green");
         RadioButton y = new RadioButton("yellow");
         RadioButton b = new RadioButton("black");
-        g.Clicked += onGreen;
-        y.Clicked += onYellow;
-        b.Clicked += onBlack;
+        g.Clicked += OnGreen;
+        y.Clicked += OnYellow;
+        b.Clicked += OnBlack;
         radioBox.Add(g);
         radioBox.Add(y);
         radioBox.Add(b);
-
         rightSide.Add(radioBox);
 
+        Button appplyStep = new Button("Apply Step");
+        appplyStep.Clicked += OnStep;
+        rightSide.Add(appplyStep);
+
+        rightSide.Margin = 5;
         mainBox.PackStart(mainBoard, true, true, 0);
         mainBox.Add(rightSide);
         Add(mainBox);
+        Timeout.Add(500, OnTimeout);
     }
 
     protected override bool OnDeleteEvent(Event e) {
@@ -156,45 +220,36 @@ class BoardWindow : Gtk.Window {
         mainBoard.fillBoard(board);
     }
 
-    void onGreen(object? sender, EventArgs e){
+    void OnGreen(object? sender, EventArgs e){
         mainBoard.setColor(Colors.Green);
     }
 
-    void onYellow(object? sender, EventArgs e){
+    void OnYellow(object? sender, EventArgs e){
         mainBoard.setColor(Colors.Yellow);
     }
 
-    void onBlack(object? sender, EventArgs e){
+    void OnBlack(object? sender, EventArgs e){
         mainBoard.setColor(Colors.Black);
     }
+
+    void OnStep(object? sender, EventArgs e){
+        mainBoard.ApplyStep();
+    }
+
+    bool OnTimeout() {
+        if (playing){
+            mainBoard.ApplyStep();
+        }
+        return true;
+    }
 }
-
-// CODE NOT USED ***
-
-
-// Gtk class of the control window UI (not in use)
-// class ControlWindow : Gtk.Window {
-//     public ControlWindow() : base("Control Window") {
-//         Box mainBox = new Box(Orientation.Vertical, 5);
-//         mainBox.Add(new Label("Test Label"));
-
-//         Add(mainBox);
-//     }
-
-//     protected override bool OnDeleteEvent(Event e) {
-//         Application.Quit();
-//         return true;
-//     }
-// }
-
-// ***
 
 // Main execution loop of the program
 class MainLoop {
     public static void Main(string[] args){
         Application.Init();
 
-        SimBoard board = new SimBoard(10);
+        SimBoard board = new SimBoard(20);
         BoardWindow main = new BoardWindow(board);
         main.Draw(board);
         // ControlWindow control = new ControlWindow();
