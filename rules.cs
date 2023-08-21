@@ -3,6 +3,7 @@ using System.Collections.Generic;
 class Rules{
     public Dictionary<(int, int, int), int> forestRuleH;
     public Dictionary<(int, int, int), int> forestRuleV;
+    public Dictionary<(int, int, int), int> scrollRule;
 
     public Rules(){
         forestRuleH = new Dictionary<(int, int, int), int>() {
@@ -66,6 +67,38 @@ class Rules{
             {(2, 1, 2), 2},
             {(2, 2, 0), 2},
             {(2, 2, 1), 2},
+            {(2, 2, 2), 2}
+        };
+
+        scrollRule = new Dictionary<(int, int, int), int>() {
+            {(0, 0, 0), 0},
+            {(0, 0, 1), 1},
+            {(0, 0, 2), 2},
+            {(0, 1, 0), 0},
+            {(0, 1, 1), 1},
+            {(0, 1, 2), 2},
+            {(0, 2, 0), 0},
+            {(0, 2, 1), 1},
+            {(0, 2, 2), 2},
+
+            {(1, 0, 0), 0},
+            {(1, 0, 1), 1},
+            {(1, 0, 2), 2},
+            {(1, 1, 0), 0},
+            {(1, 1, 1), 1},
+            {(1, 1, 2), 2},
+            {(1, 2, 0), 0},
+            {(1, 2, 1), 1},
+            {(1, 2, 2), 2},
+            
+            {(2, 0, 0), 0},
+            {(2, 0, 1), 1},
+            {(2, 0, 2), 2},
+            {(2, 1, 0), 0},
+            {(2, 1, 1), 1},
+            {(2, 1, 2), 2},
+            {(2, 2, 0), 0},
+            {(2, 2, 1), 1},
             {(2, 2, 2), 2}
         };
     }

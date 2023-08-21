@@ -8,6 +8,7 @@ using Timeout = GLib.Timeout;
 
 
 enum Colors {Green, Yellow, Black};
+enum RuleSet {Forest, Scroll};
 
 // Class used to store the states of the points as integers (0, 1 or 2)
 class SimBoard {
@@ -27,8 +28,20 @@ class SimBoard {
         rules = new Rules();
     }
 
+    public void IntFill (int k){
+        for (int i = 0; i < n; i++){
+            for (int j = 0; j < n; j++){
+                numBoard[i,j] = k;
+            }
+        }
+    }
+
     public void ApplyForestRule(){
         ApplyRule(rules.forestRuleH, rules.forestRuleV);
+    }
+
+    public void ApplyScrollRule(){
+        ApplyRule(rules.scrollRule, rules.scrollRule);
     }
 
     public void ApplyRule(Dictionary<(int, int, int), int> ruleH, Dictionary<(int, int, int), int> ruleV){
@@ -58,41 +71,6 @@ class SimBoard {
         numBoard = newBoardV;
     }
 
-    // public void ApplyModRule() {
-    //     int[,] newBoardH = new int[n,n];
-
-    //     for (int i = 0; i < n; i++){
-    //         for (int j = 0; j < n; j++){
-    //             newBoardH[i,j] = ModHorizontal(i, j);
-    //         }
-    //     }
-        
-    //     numBoard = newBoardH;
-    //     int[,] newBoardV = new int[n,n];
-
-    //     for (int i = 0; i < n; i++){
-    //         for (int j = 0; j < n; j++){
-    //             newBoardV[i,j] = ModVertical(i, j);
-    //         }
-    //     }
-
-    //     numBoard = newBoardV;
-    // }
-
-    // int ModHorizontal(int i, int j){
-    //     int left = ((j - 1) < 0) ? (n - 1) : (j - 1);
-    //     int right = ((j + 1) >= n) ? 0 : (j + 1);
-
-    //     return (numBoard[i, j] + numBoard[i, left] + numBoard[i, right]) % 3;
-    // }
-
-    // int ModVertical(int i, int j){
-    //     int up = ((i - 1) < 0) ? (n - 1) : (i - 1);
-    //     int down = ((i + 1) >= n) ? 0 : (i + 1);
-
-    //     return (numBoard[i, j] + numBoard[down, j] + numBoard[up, j]) % 3;
-    // }
-
 }
 
 // Class used for the visual representation of the simulation board
@@ -102,6 +80,7 @@ class DrawBoard : DrawingArea {
     black = new Color(0, 0, 0);
     SimBoard numMatrix;
     Colors currColor;
+    RuleSet currRule;
 
     double xCord;
     double yCord;
@@ -112,6 +91,7 @@ class DrawBoard : DrawingArea {
         board = new ImageSurface(Format.Rgb24, 750, 750);
         numMatrix = inp;
         currColor = Colors.Green;
+        currRule = RuleSet.Forest;
 
         using (Context c = new Context(board)) {
             c.SetSourceColor(green);
@@ -149,7 +129,7 @@ class DrawBoard : DrawingArea {
         
 
         numMatrix.numBoard[xIndex, yIndex] = fillInt;
-        fillBoard(numMatrix);
+        FillBoard(numMatrix);
 
         QueueDraw();
         return true;
@@ -165,7 +145,7 @@ class DrawBoard : DrawingArea {
         c.Fill();
     }
 
-    public void fillBoard(SimBoard InpBoard){
+    public void FillBoard(SimBoard InpBoard){
         Context c = new Context(board);
         int[,] matrix = InpBoard.numBoard;
         int n = matrix.GetLength(0);
@@ -183,13 +163,38 @@ class DrawBoard : DrawingArea {
         }
     }
 
-    public void setColor(Colors inp){
+    public void ColorFill(){
+        int fillInt;
+
+        if (currColor == Colors.Green){
+            fillInt = 0;
+        } else if (currColor == Colors.Yellow){
+            fillInt = 1;
+        } else {
+            fillInt = 2;
+        }
+
+        numMatrix.IntFill(fillInt);
+        FillBoard(numMatrix);
+        QueueDraw();
+    }
+
+    public void SetColor(Colors inp){
         currColor = inp;
     }
 
+    public void SetRule(RuleSet inp){
+        currRule = inp;
+    }
+
     public void ApplyStep(){
-        numMatrix.ApplyForestRule();
-        fillBoard(numMatrix);
+        if (currRule == RuleSet.Forest){
+            numMatrix.ApplyForestRule();
+        } else if (currRule == RuleSet.Scroll){
+            numMatrix.ApplyScrollRule();
+        }
+
+        FillBoard(numMatrix);
         QueueDraw();
     }
 }
@@ -210,8 +215,8 @@ class BoardWindow : Gtk.Window {
 
         Box radioBox = new Box(Orientation.Horizontal, 5);
         RadioButton g = new RadioButton("green");
-        RadioButton y = new RadioButton("yellow");
-        RadioButton b = new RadioButton("black");
+        RadioButton y = new RadioButton(g, "yellow");
+        RadioButton b = new RadioButton(g, "black");
         g.Clicked += OnGreen;
         y.Clicked += OnYellow;
         b.Clicked += OnBlack;
@@ -219,6 +224,10 @@ class BoardWindow : Gtk.Window {
         radioBox.Add(y);
         radioBox.Add(b);
         rightSide.Add(radioBox);
+
+        Button fill = new Button("Fill Board");
+        fill.Clicked += OnFill;
+        rightSide.Add(fill);
 
         Button appplyStep = new Button("Apply Step");
         appplyStep.Clicked += OnStep;
@@ -228,13 +237,22 @@ class BoardWindow : Gtk.Window {
         Button play = new Button();
         play.Clicked += OnPlay;
         play.Image = new Image("icons/play.png");
-        playBar.Add(play);
+        playBar.PackStart(play, true, true, 1);
         Button pause = new Button();
         pause.Clicked += OnPause;
         pause.Image = new Image("icons/pause.png");
-        playBar.Add(pause);
+        playBar.PackStart(pause, true, true, 1);
         rightSide.Add(playBar);
+
+        RadioButton ruleOne = new RadioButton("Forest Rule");
+        ruleOne.Clicked += OnForest;
+        RadioButton ruleTwo = new RadioButton(ruleOne, "Scroll Rule");
+        ruleTwo.Clicked += OnScroll;
+        RadioButton ruleThree = new RadioButton(ruleOne, "Rules 3");
         
+        rightSide.Add(ruleOne);
+        rightSide.Add(ruleTwo);
+        rightSide.Add(ruleThree);
 
         rightSide.Margin = 5;
         mainBox.PackStart(mainBoard, true, true, 0);
@@ -249,23 +267,31 @@ class BoardWindow : Gtk.Window {
     }
 
     public void Draw(SimBoard board){
-        mainBoard.fillBoard(board);
+        mainBoard.FillBoard(board);
     }
 
     void OnGreen(object? sender, EventArgs e){
-        mainBoard.setColor(Colors.Green);
+        mainBoard.SetColor(Colors.Green);
     }
 
     void OnYellow(object? sender, EventArgs e){
-        mainBoard.setColor(Colors.Yellow);
+        mainBoard.SetColor(Colors.Yellow);
     }
 
     void OnBlack(object? sender, EventArgs e){
-        mainBoard.setColor(Colors.Black);
+        mainBoard.SetColor(Colors.Black);
     }
 
     void OnStep(object? sender, EventArgs e){
         mainBoard.ApplyStep();
+    }
+
+    void OnForest(object? sender, EventArgs e){
+        mainBoard.SetRule(RuleSet.Forest);
+    }
+
+    void OnScroll(object? sender, EventArgs e){
+        mainBoard.SetRule(RuleSet.Scroll);
     }
 
     bool OnTimeout() {
@@ -281,6 +307,10 @@ class BoardWindow : Gtk.Window {
 
     void OnPause(object? sender, EventArgs e){
         playing = false;
+    }
+
+    void OnFill(object? sender, EventArgs e){
+        mainBoard.ColorFill();
     }
 }
 
