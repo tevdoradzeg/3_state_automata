@@ -8,7 +8,7 @@ using Timeout = GLib.Timeout;
 
 
 enum Colors {Green, Yellow, Black};
-enum RuleSet {Forest, Scroll};
+enum RuleSet {Forest, Scroll, Third};
 
 // Class used to store the states of the points as integers (0, 1 or 2)
 class SimBoard {
@@ -42,6 +42,10 @@ class SimBoard {
 
     public void ApplyScrollRule(){
         ApplyRule(rules.scrollRule, rules.scrollRule);
+    }
+
+    public void ApplyThirdRule(){
+        ApplyRule(rules.H, rules.V);
     }
 
     public void ApplyRule(Dictionary<(int, int, int), int> ruleH, Dictionary<(int, int, int), int> ruleV){
@@ -192,6 +196,8 @@ class DrawBoard : DrawingArea {
             numMatrix.ApplyForestRule();
         } else if (currRule == RuleSet.Scroll){
             numMatrix.ApplyScrollRule();
+        } else {
+            numMatrix.ApplyThirdRule();
         }
 
         FillBoard(numMatrix);
@@ -249,7 +255,8 @@ class BoardWindow : Gtk.Window {
         RadioButton ruleTwo = new RadioButton(ruleOne, "Scroll Rule");
         ruleTwo.Clicked += OnScroll;
         RadioButton ruleThree = new RadioButton(ruleOne, "Rules 3");
-        
+        ruleThree.Clicked += OnThird;
+
         rightSide.Add(ruleOne);
         rightSide.Add(ruleTwo);
         rightSide.Add(ruleThree);
@@ -292,6 +299,10 @@ class BoardWindow : Gtk.Window {
 
     void OnScroll(object? sender, EventArgs e){
         mainBoard.SetRule(RuleSet.Scroll);
+    }
+
+    void OnThird(object? sender, EventArgs e){
+        mainBoard.SetRule(RuleSet.Third);
     }
 
     bool OnTimeout() {
