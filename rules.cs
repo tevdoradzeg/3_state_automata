@@ -1,12 +1,17 @@
 using System.Collections.Generic;
 
+// Custom class that sets up dictionaries for different rules
 class Rules{
+    // Dictionaries for the Forest Rule
     public Dictionary<(int, int, int), int> forestRuleH;
     public Dictionary<(int, int, int), int> forestRuleV;
+    // Dictionary for the Scroll Rule
     public Dictionary<(int, int, int), int> scrollRule;
+    // Dictionaries for the Stair Rule
     public Dictionary<(int, int, int), int> H;
     public Dictionary<(int, int, int), int> V;
 
+    // Initialization method setting up the dictionaries
     public Rules(){
         forestRuleH = new Dictionary<(int, int, int), int>() {
             {(0, 0, 0), 0},
